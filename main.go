@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
 func main() {
-	url := "https://api.github.com"
+	url := "http://localhost"
 
 	client := http.Client{}
 
@@ -17,7 +17,7 @@ func main() {
 	}
 
 	defer response.Body.Close()
-	bytes, error := ioutil.ReadAll(response.Body)
+	bytes, error := io.ReadAll(response.Body)
 	if error != nil {
 		panic(error)
 	}
