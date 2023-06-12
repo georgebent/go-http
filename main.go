@@ -2,26 +2,14 @@ package main
 
 import (
 	"fmt"
-	"io"
-	"net/http"
+	"unsafe"
+
+	"github.com/georgebent/go-httpclient/gohttp"
 )
 
 func main() {
-	url := "http://localhost"
+	client := gohttp.Client{}
+	client.Get()
 
-	client := http.Client{}
-
-	response, error := client.Get(url)
-	if error != nil {
-		panic(error)
-	}
-
-	defer response.Body.Close()
-	bytes, error := io.ReadAll(response.Body)
-	if error != nil {
-		panic(error)
-	}
-
-	fmt.Println(response.StatusCode)
-	fmt.Println(string(bytes))
+	fmt.Println(unsafe.Sizeof(client))
 }
