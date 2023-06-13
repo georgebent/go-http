@@ -2,14 +2,16 @@ package main
 
 import (
 	"fmt"
-	"unsafe"
 
 	"github.com/georgebent/go-httpclient/gohttp"
 )
 
 func main() {
-	client := gohttp.Client{}
-	client.Get()
+	client := gohttp.New()
+	response, error := client.Get("http://localhost", nil)
+	if error != nil {
+		panic(error)
+	}
 
-	fmt.Println(unsafe.Sizeof(client))
+	fmt.Println(response.StatusCode)
 }
