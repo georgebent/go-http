@@ -13,13 +13,18 @@ type HttpClient interface {
 	Patch(url string, headers http.Header, body interface{}) (*http.Response, error)
 }
 
-func New() HttpClient {
-	client := &Client{}
-	return client
+type Client struct {
+	CoreClient *http.Client
+	Headers    http.Header
 }
 
-type Client struct {
-	Headers http.Header
+func New() HttpClient {
+	coreClient := http.Client{}
+	client := &Client{
+		CoreClient: &coreClient,
+	}
+
+	return client
 }
 
 func (c *Client) SetHeaders(headers http.Header) {

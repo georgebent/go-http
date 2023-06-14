@@ -9,7 +9,6 @@ import (
 )
 
 func (c *Client) do(method string, url string, headers http.Header, body interface{}) (*http.Response, error) {
-	client := http.Client{}
 	fullHeaders := c.getRequestHeaders(headers)
 	requestBody, error := c.getRequestBody(fullHeaders.Get("Content-Type"), body)
 	if error != nil {
@@ -23,7 +22,7 @@ func (c *Client) do(method string, url string, headers http.Header, body interfa
 
 	request.Header = fullHeaders
 
-	return client.Do(request)
+	return c.CoreClient.Do(request)
 }
 
 func (c *Client) getRequestHeaders(requestHeaders http.Header) http.Header {
