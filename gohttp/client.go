@@ -2,55 +2,21 @@ package gohttp
 
 import (
 	"net/http"
-	"time"
+	"sync"
 )
 
 type HttpClient interface {
-	SetHeaders(headers http.Header)
 	Get(url string, headers http.Header) (*http.Response, error)
 	Post(url string, headers http.Header, body interface{}) (*http.Response, error)
 	Put(url string, headers http.Header, body interface{}) (*http.Response, error)
 	Delete(url string, headers http.Header) (*http.Response, error)
 	Patch(url string, headers http.Header, body interface{}) (*http.Response, error)
-	SetConnectionTimeout(timeout time.Duration)
-	SetResponseTimeout(timeout time.Duration)
-	SetMaxIdleConnections(maxConnections int)
-	DisableTimeouts(b bool)
 }
 
 type Client struct {
-	CoreClient         *http.Client
-	MaxIdleConnections int
-	ConnectionTimeout  time.Duration
-	ResponseTimeout    time.Duration
-	Headers            http.Header
-	DisabledTimeouts   bool
-}
-
-func New() HttpClient {
-	client := &Client{}
-
-	return client
-}
-
-func (c *Client) SetHeaders(headers http.Header) {
-	c.Headers = headers
-}
-
-func (c *Client) SetConnectionTimeout(timeout time.Duration) {
-	c.ConnectionTimeout = timeout
-}
-
-func (c *Client) SetResponseTimeout(timeout time.Duration) {
-	c.ResponseTimeout = timeout
-}
-
-func (c *Client) SetMaxIdleConnections(maxConnections int) {
-	c.MaxIdleConnections = maxConnections
-}
-
-func (c *Client) DisableTimeouts(disabledTimeouts bool) {
-	c.DisabledTimeouts = disabledTimeouts
+	CoreClient *http.Client
+	Builder    *clientBuilder
+	ClientOnce sync.Once
 }
 
 func (c *Client) Get(url string, headers http.Header) (*http.Response, error) {

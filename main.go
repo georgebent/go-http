@@ -3,29 +3,41 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/georgebent/go-httpclient/gohttp"
 )
 
-func getAuthorisedClient() gohttp.HttpClient {
-	httpClient := gohttp.New()
+var (
+	AuthorisedClient = getAuthorisedClient()
+)
 
+func getAuthorisedClient() gohttp.HttpClient {
 	headers := make(http.Header)
-	headers.Set("Authorization", "Bearer ABC-1234")
-	httpClient.SetHeaders(headers)
+	headers.Set("Authorization", "Bearer ABC-12345678")
+
+	httpClient := gohttp.NewBuilder().SetHeaders(headers).DisableTimeouts(true).Build()
 
 	return httpClient
 }
 
 func main() {
-	client := getAuthorisedClient()
-	client.DisableTimeouts(true)
+	for i := 0; i <= 1; i++ {
+		go func() {
+			runRequest()
+		}()
+	}
 
+	time.Sleep(5 * time.Second)
+}
+
+func runRequest() {
 	body := make(map[string]string)
 	body["firstname"] = "John"
 	body["lastname"] = "Stranger"
+	body["type"] = "Builder Singletone"
 
-	response, error := client.Post("https://webhook.site/2c52f051-5e9f-458e-8e4d-4cf44fff1ada", nil, body)
+	response, error := AuthorisedClient.Post("https://webhook.site/2c52f051-5e9f-458e-8e4d-4cf44fff1ada", nil, body)
 	if error != nil {
 		panic(error)
 	}

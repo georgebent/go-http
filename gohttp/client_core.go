@@ -36,7 +36,7 @@ func (c *Client) do(method string, url string, headers http.Header, body interfa
 func (c *Client) getRequestHeaders(requestHeaders http.Header) http.Header {
 	result := make(http.Header)
 
-	for header, value := range c.Headers {
+	for header, value := range c.Builder.Headers {
 		if len(value) > 0 {
 			result.Set(header, value[0])
 		}
@@ -67,38 +67,36 @@ func (c *Client) getRequestBody(contentType string, body interface{}) ([]byte, e
 }
 
 func (c *Client) getHttpClient() *http.Client {
-	if c.CoreClient != nil {
-		return c.CoreClient
-	}
-
-	c.CoreClient = &http.Client{
-		Timeout: c.getConnectionTimeout() + c.getResponseTimeout(),
-		Transport: &http.Transport{
-			MaxIdleConns:          c.getMaxIdleConnections(),
-			ResponseHeaderTimeout: c.getResponseTimeout(),
-			DialContext: (&net.Dialer{
-				Timeout: c.getConnectionTimeout(),
-			}).DialContext,
-		},
-	}
+	c.ClientOnce.Do(func() {
+		c.CoreClient = &http.Client{
+			Timeout: c.getConnectionTimeout() + c.getResponseTimeout(),
+			Transport: &http.Transport{
+				MaxIdleConns:          c.getMaxIdleConnections(),
+				ResponseHeaderTimeout: c.getResponseTimeout(),
+				DialContext: (&net.Dialer{
+					Timeout: c.getConnectionTimeout(),
+				}).DialContext,
+			},
+		}
+	})
 
 	return c.CoreClient
 }
 
 func (c *Client) getMaxIdleConnections() int {
-	if c.MaxIdleConnections > 0 {
-		return c.MaxIdleConnections
+	if c.Builder.MaxIdleConnections > 0 {
+		return c.Builder.MaxIdleConnections
 	}
 
 	return DEFAULT_MAX_IDDLE_CONNECTIONS
 }
 
 func (c *Client) getResponseTimeout() time.Duration {
-	if c.ResponseTimeout > 0 {
-		return c.ResponseTimeout
+	if c.Builder.ResponseTimeout > 0 {
+		return c.Builder.ResponseTimeout
 	}
 
-	if c.DisabledTimeouts {
+	if c.Builder.DisabledTimeouts {
 		return 0
 	}
 
@@ -106,11 +104,11 @@ func (c *Client) getResponseTimeout() time.Duration {
 }
 
 func (c *Client) getConnectionTimeout() time.Duration {
-	if c.ConnectionTimeout > 0 {
-		return c.ConnectionTimeout
+	if c.Builder.ConnectionTimeout > 0 {
+		return c.Builder.ConnectionTimeout
 	}
 
-	if c.DisabledTimeouts {
+	if c.Builder.DisabledTimeouts {
 		return 0
 	}
 
