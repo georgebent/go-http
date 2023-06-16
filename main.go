@@ -19,6 +19,7 @@ func getAuthorisedClient() gohttp.HttpClient {
 
 func main() {
 	client := getAuthorisedClient()
+	client.DisableTimeouts(true)
 
 	body := make(map[string]string)
 	body["firstname"] = "John"

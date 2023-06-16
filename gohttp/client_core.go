@@ -4,8 +4,16 @@ import (
 	"bytes"
 	"encoding/json"
 	"encoding/xml"
+	"net"
 	"net/http"
 	"strings"
+	"time"
+)
+
+const (
+	DEFAULT_MAX_IDDLE_CONNECTIONS = 5
+	DEFAULT_RESPONSE_TIMEOUT      = 5 * time.Second
+	DEFAULT_CONNECTION_TIMEOUT    = 1 * time.Second
 )
 
 func (c *Client) do(method string, url string, headers http.Header, body interface{}) (*http.Response, error) {
@@ -22,7 +30,7 @@ func (c *Client) do(method string, url string, headers http.Header, body interfa
 
 	request.Header = fullHeaders
 
-	return c.CoreClient.Do(request)
+	return c.getHttpClient().Do(request)
 }
 
 func (c *Client) getRequestHeaders(requestHeaders http.Header) http.Header {
@@ -56,4 +64,55 @@ func (c *Client) getRequestBody(contentType string, body interface{}) ([]byte, e
 	default:
 		return json.Marshal(body)
 	}
+}
+
+func (c *Client) getHttpClient() *http.Client {
+	if c.CoreClient != nil {
+		return c.CoreClient
+	}
+
+	c.CoreClient = &http.Client{
+		Timeout: c.getConnectionTimeout() + c.getResponseTimeout(),
+		Transport: &http.Transport{
+			MaxIdleConns:          c.getMaxIdleConnections(),
+			ResponseHeaderTimeout: c.getResponseTimeout(),
+			DialContext: (&net.Dialer{
+				Timeout: c.getConnectionTimeout(),
+			}).DialContext,
+		},
+	}
+
+	return c.CoreClient
+}
+
+func (c *Client) getMaxIdleConnections() int {
+	if c.MaxIdleConnections > 0 {
+		return c.MaxIdleConnections
+	}
+
+	return DEFAULT_MAX_IDDLE_CONNECTIONS
+}
+
+func (c *Client) getResponseTimeout() time.Duration {
+	if c.ResponseTimeout > 0 {
+		return c.ResponseTimeout
+	}
+
+	if c.DisabledTimeouts {
+		return 0
+	}
+
+	return DEFAULT_RESPONSE_TIMEOUT
+}
+
+func (c *Client) getConnectionTimeout() time.Duration {
+	if c.ConnectionTimeout > 0 {
+		return c.ConnectionTimeout
+	}
+
+	if c.DisabledTimeouts {
+		return 0
+	}
+
+	return DEFAULT_CONNECTION_TIMEOUT
 }
