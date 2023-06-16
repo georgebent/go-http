@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"encoding/xml"
+	"io"
 	"net"
 	"net/http"
 	"strings"
@@ -16,7 +17,7 @@ const (
 	DEFAULT_CONNECTION_TIMEOUT    = 1 * time.Second
 )
 
-func (c *Client) do(method string, url string, headers http.Header, body interface{}) (*http.Response, error) {
+func (c *Client) do(method string, url string, headers http.Header, body interface{}) (*Response, error) {
 	fullHeaders := c.getRequestHeaders(headers)
 	requestBody, error := c.getRequestBody(fullHeaders.Get("Content-Type"), body)
 	if error != nil {
@@ -30,7 +31,25 @@ func (c *Client) do(method string, url string, headers http.Header, body interfa
 
 	request.Header = fullHeaders
 
-	return c.getHttpClient().Do(request)
+	response, error := c.getHttpClient().Do(request)
+	if error != nil {
+		return nil, error
+	}
+
+	defer response.Body.Close()
+	responseBody, error := io.ReadAll(response.Body)
+	if error != nil {
+		return nil, error
+	}
+
+	finalResponse := Response{
+		Status:     response.Status,
+		StatusCode: response.StatusCode,
+		Headers:    request.Header,
+		Body:       responseBody,
+	}
+
+	return &finalResponse, nil
 }
 
 func (c *Client) getRequestHeaders(requestHeaders http.Header) http.Header {

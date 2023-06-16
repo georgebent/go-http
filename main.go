@@ -42,5 +42,5 @@ func runRequest() {
 		panic(error)
 	}
 
-	fmt.Println(response.StatusCode)
+	fmt.Println(response.GetStatusCode())
 }
