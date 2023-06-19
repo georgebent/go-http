@@ -12,7 +12,7 @@ func TestGetRequestHeaders(t *testing.T) {
 	commonHeaders.Set("User-Agent", "cool-http-client")
 
 	builder := clientBuilder{
-		Headers: commonHeaders,
+		headers: commonHeaders,
 	}
 
 	client := Client{

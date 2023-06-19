@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/georgebent/go-httpclient/gohttp"
 )
@@ -22,13 +21,7 @@ func getAuthorisedClient() gohttp.HttpClient {
 }
 
 func main() {
-	for i := 0; i <= 1; i++ {
-		go func() {
-			runRequest()
-		}()
-	}
-
-	time.Sleep(5 * time.Second)
+	runRequest()
 }
 
 func runRequest() {

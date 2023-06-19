@@ -24,6 +24,10 @@ func (c *Client) do(method string, url string, headers http.Header, body interfa
 		return nil, error
 	}
 
+	if mock := mockupServer.getMock(method, url, string(requestBody)); mock != nil {
+		return mock.GetResponse()
+	}
+
 	request, error := http.NewRequest(method, url, bytes.NewBuffer(requestBody))
 	if error != nil {
 		return nil, error
@@ -43,11 +47,13 @@ func (c *Client) do(method string, url string, headers http.Header, body interfa
 	}
 
 	finalResponse := Response{
-		Status:     response.Status,
-		StatusCode: response.StatusCode,
-		Headers:    request.Header,
-		Body:       responseBody,
+		status:     response.Status,
+		statusCode: response.StatusCode,
+		headers:    request.Header,
+		body:       responseBody,
 	}
+
+	finalResponse.status = "dsd ssd"
 
 	return &finalResponse, nil
 }
@@ -55,7 +61,7 @@ func (c *Client) do(method string, url string, headers http.Header, body interfa
 func (c *Client) getRequestHeaders(requestHeaders http.Header) http.Header {
 	result := make(http.Header)
 
-	for header, value := range c.Builder.Headers {
+	for header, value := range c.Builder.headers {
 		if len(value) > 0 {
 			result.Set(header, value[0])
 		}
@@ -86,7 +92,7 @@ func (c *Client) getRequestBody(contentType string, body interface{}) ([]byte, e
 }
 
 func (c *Client) getHttpClient() *http.Client {
-	c.ClientOnce.Do(func() {
+	c.clientOnce.Do(func() {
 		c.CoreClient = &http.Client{
 			Timeout: c.getConnectionTimeout() + c.getResponseTimeout(),
 			Transport: &http.Transport{
@@ -103,19 +109,19 @@ func (c *Client) getHttpClient() *http.Client {
 }
 
 func (c *Client) getMaxIdleConnections() int {
-	if c.Builder.MaxIdleConnections > 0 {
-		return c.Builder.MaxIdleConnections
+	if c.Builder.maxIdleConnections > 0 {
+		return c.Builder.maxIdleConnections
 	}
 
 	return DEFAULT_MAX_IDDLE_CONNECTIONS
 }
 
 func (c *Client) getResponseTimeout() time.Duration {
-	if c.Builder.ResponseTimeout > 0 {
-		return c.Builder.ResponseTimeout
+	if c.Builder.responseTimeout > 0 {
+		return c.Builder.responseTimeout
 	}
 
-	if c.Builder.DisabledTimeouts {
+	if c.Builder.disabledTimeouts {
 		return 0
 	}
 
@@ -123,11 +129,11 @@ func (c *Client) getResponseTimeout() time.Duration {
 }
 
 func (c *Client) getConnectionTimeout() time.Duration {
-	if c.Builder.ConnectionTimeout > 0 {
-		return c.Builder.ConnectionTimeout
+	if c.Builder.connectionTimeout > 0 {
+		return c.Builder.connectionTimeout
 	}
 
-	if c.Builder.DisabledTimeouts {
+	if c.Builder.disabledTimeouts {
 		return 0
 	}
 

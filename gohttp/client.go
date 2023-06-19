@@ -16,7 +16,7 @@ type HttpClient interface {
 type Client struct {
 	CoreClient *http.Client
 	Builder    *clientBuilder
-	ClientOnce sync.Once
+	clientOnce sync.Once
 }
 
 func (c *Client) Get(url string, headers http.Header) (*Response, error) {
