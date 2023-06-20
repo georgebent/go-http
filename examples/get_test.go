@@ -2,7 +2,6 @@ package examples
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"testing"
 
@@ -41,7 +40,6 @@ func TestGetResponse(t *testing.T) {
 	})
 
 	result, err := Get()
-	fmt.Println(result)
 	if result == "" {
 		t.Error("Expect not empty body")
 	}
