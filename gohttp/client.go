@@ -3,14 +3,16 @@ package gohttp
 import (
 	"net/http"
 	"sync"
+
+	"github.com/georgebent/go-httpclient/core"
 )
 
 type HttpClient interface {
-	Get(url string, headers http.Header) (*Response, error)
-	Post(url string, headers http.Header, body interface{}) (*Response, error)
-	Put(url string, headers http.Header, body interface{}) (*Response, error)
-	Delete(url string, headers http.Header) (*Response, error)
-	Patch(url string, headers http.Header, body interface{}) (*Response, error)
+	Get(url string, headers http.Header) (*core.Response, error)
+	Post(url string, headers http.Header, body interface{}) (*core.Response, error)
+	Put(url string, headers http.Header, body interface{}) (*core.Response, error)
+	Delete(url string, headers http.Header) (*core.Response, error)
+	Patch(url string, headers http.Header, body interface{}) (*core.Response, error)
 }
 
 type Client struct {
@@ -19,21 +21,21 @@ type Client struct {
 	clientOnce sync.Once
 }
 
-func (c *Client) Get(url string, headers http.Header) (*Response, error) {
+func (c *Client) Get(url string, headers http.Header) (*core.Response, error) {
 	return c.do(http.MethodGet, url, headers, nil)
 }
 
-func (c *Client) Post(url string, headers http.Header, body interface{}) (*Response, error) {
+func (c *Client) Post(url string, headers http.Header, body interface{}) (*core.Response, error) {
 	return c.do(http.MethodPost, url, headers, body)
 }
 
-func (c *Client) Put(url string, headers http.Header, body interface{}) (*Response, error) {
+func (c *Client) Put(url string, headers http.Header, body interface{}) (*core.Response, error) {
 	return c.do(http.MethodPut, url, headers, nil)
 }
 
-func (c *Client) Delete(url string, headers http.Header) (*Response, error) {
+func (c *Client) Delete(url string, headers http.Header) (*core.Response, error) {
 	return c.do(http.MethodDelete, url, headers, nil)
 }
-func (c *Client) Patch(url string, headers http.Header, body interface{}) (*Response, error) {
+func (c *Client) Patch(url string, headers http.Header, body interface{}) (*core.Response, error) {
 	return c.do(http.MethodPatch, url, headers, nil)
 }

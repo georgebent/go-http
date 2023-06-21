@@ -26,20 +26,20 @@ headers.Set("Some-Common-Header", "value-for-all-requests")
 // Create a new builder:
 client := gohttp.NewBuilder().
 
-	// You can set global headers to be used in every request made by this client:
-	SetHeaders(headers).
+// You can set global headers to be used in every request made by this client:
+SetHeaders(headers).
 
-	// Configure the timeout for getting a new connection:
-	SetConnectionTimeout(2 * time.Second).
+// Configure the timeout for getting a new connection:
+SetConnectionTimeout(2 * time.Second).
 
-	// Configure the timeout for performing the actual HTTP call:
-	SetResponseTimeout(3 * time.Second).
+// Configure the timeout for performing the actual HTTP call:
+SetResponseTimeout(3 * time.Second).
 
-	// Configure the User-Agent header that will be used for all of the requests:
-	SetUserAgent("Your-User-Agent").
+// Configure the User-Agent header that will be used for all of the requests:
+SetUserAgent("Your-User-Agent").
 
-	// Finally, build the client and start using it!
-	Build()
+// Finally, build the client and start using it!
+Build()
 ```
 
 ## Performing HTTP calls
@@ -52,78 +52,37 @@ Take a look at all of the [EXAMPLES](examples) for more information.
 ### Get
 
 ```go
-type Endpoints struct {
-	CurrentUserUrl    string `json:"current_user_url"`
-	AuthorizationsUrl string `json:"authorizations_url"`
-	RepositoryUrl     string `json:"repository_url"`
+res, err := HttpClient.Get("http://localhost", nil)
+if err != nil {
+	return "", err
 }
 
-func GetEndpoints() (*Endpoints, error) {
-	// Make the request and wait for the response:
-	response, err := httpClient.Get("https://api.github.com", nil)
-	if err != nil {
-		// Deal with the error as you need:
-		return nil, err
-	}
-
-	// Interacting with the response:
-	fmt.Println(fmt.Sprintf("Status Code: %d", response.StatusCode))
-	fmt.Println(fmt.Sprintf("Status: %s", response.Status))
-	fmt.Println(fmt.Sprintf("Body: %s\n", response.BodyString()))
-
-	// Processing JSON responses:
-	var endpoints Endpoints
-	if err := response.UnmarshalJson(&endpoints); err != nil {
-		// Deal with the unmarshal error as you need:
-		return nil, err
-	}
-
-	fmt.Println(fmt.Sprintf("Repository URL: %s", endpoints.RepositoryUrl))
-	return &endpoints, nil
-}
+fmt.Println(response.StatusCode)
+fmt.Println(response.BodyString())
 ```
 
 ### Post
 
 ```go
 
-// The struct representing the actual JSON response from the API we're calling:
-type GithubError struct {
-	StatusCode       int    `json:"-"`
-	Message          string `json:"message"`
-	DocumentationUrl string `json:"documentation_url"`
+// The struct representing the actual response from the API we're calling:
+headers := make(http.Header)
+headers.Set("Authorization", "Bearer ABC-12345678")
+
+body := make(map[string]string)
+body["firstname"] = "John"
+body["lastname"] = "Stranger"
+body["type"] = "Builder"
+
+response, error := HttpClient.Post("http://localhost", headers, body)
+if error != nil {
+	fmt.Println(string(error.Error()))
+
+	return "", error
 }
 
-// The struct representing the JSON body we're going to send:
-type Repository struct {
-	Name        string `json:"name"`
-	Description string `json:"description,omitempty"`
-	Private     bool   `json:"private"`
-}
-
-func CreateRepo(request Repository) (*Repository, error) {
-	// Make the request and wait for the response:
-	response, err := httpClient.Post("https://api.github.com/user/repos", request, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	// Deal with failed status codes:
-	if response.StatusCode != http.StatusCreated {
-		var githubError GithubError
-		if err := response.UnmarshalJson(&githubError); err != nil {
-			return nil, errors.New("error processing github error response when creating a new repo")
-		}
-		return nil, errors.New(githubError.Message)
-	}
-
-	// Deal with successful response:
-	var result Repository
-	if err := response.UnmarshalJson(&result); err != nil {
-		return nil, err
-	}
-	return &result, nil
-}
+fmt.Println(response.StatusCode)
+fmt.Println(response.BodyString())
 
 ```
 
@@ -141,7 +100,7 @@ import "github.com/georgebent/go-httpclient/gohttp"
 ```go
 func TestMain(m *testing.M) {
 	// Tell the HTTP library to mock any further requests from here.
-	gohttp.MockupServer.Start()
+	gohttp_mock.MockupServer.StartMockServer()
 
 	// Start the test cases for this pacakge:
 	os.Exit(m.Run())
@@ -154,10 +113,10 @@ Once you start the mock server, every request will be handled by this server and
 
 ```go
 // Delete all mocks in every new test case to ensure a clean environment:
-gohttp.MockupServer.DeleteMocks()
+gohttp_mock.MockupServer.DeleteMocks()
 
 // Configure a new mock:
-gohttp.MockupServer.AddMock(gohttp_mock.Mock{
+gohttp_mock.MockupServer.AddMock(gohttp_mock.Mock{
 	Method:      http.MethodPost,
 	Url:         "https://api.github.com/user/repos",
 	RequestBody: `{"name":"test-repo","private":true}`,

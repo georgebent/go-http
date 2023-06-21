@@ -5,13 +5,13 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/georgebent/go-httpclient/gohttp"
+	"github.com/georgebent/go-httpclient/gohttp_mock"
 )
 
 func TestGetError(t *testing.T) {
-	gohttp.StartMockServer()
+	gohttp_mock.StartMockServer()
 
-	gohttp.AddMock(gohttp.Mock{
+	gohttp_mock.AddMock(gohttp_mock.Mock{
 		Method: http.MethodGet,
 		Url:    "http://localhost",
 		Error:  errors.New("timeout getting responce"),
@@ -32,7 +32,7 @@ func TestGetError(t *testing.T) {
 }
 
 func TestGetResponse(t *testing.T) {
-	gohttp.AddMock(gohttp.Mock{
+	gohttp_mock.AddMock(gohttp_mock.Mock{
 		Method:         http.MethodGet,
 		Url:            "http://localhost",
 		ResponseStatus: 200,

@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/georgebent/go-httpclient/core"
+	"github.com/georgebent/go-httpclient/gohttp_mock"
 	"github.com/georgebent/go-httpclient/gomime"
 )
 
@@ -19,15 +21,11 @@ const (
 	DEFAULT_CONNECTION_TIMEOUT    = 1 * time.Second
 )
 
-func (c *Client) do(method string, url string, headers http.Header, body interface{}) (*Response, error) {
+func (c *Client) do(method string, url string, headers http.Header, body interface{}) (*core.Response, error) {
 	fullHeaders := c.getRequestHeaders(headers)
 	requestBody, error := c.getRequestBody(fullHeaders.Get(gomime.HEADER_CONTENT_TYPE), body)
 	if error != nil {
 		return nil, error
-	}
-
-	if mock := mockupServer.getMock(method, url, string(requestBody)); mock != nil {
-		return mock.GetResponse()
 	}
 
 	request, error := http.NewRequest(method, url, bytes.NewBuffer(requestBody))
@@ -48,11 +46,11 @@ func (c *Client) do(method string, url string, headers http.Header, body interfa
 		return nil, error
 	}
 
-	finalResponse := Response{
-		status:     response.Status,
-		statusCode: response.StatusCode,
-		headers:    request.Header,
-		body:       responseBody,
+	finalResponse := core.Response{
+		Status:     response.Status,
+		StatusCode: response.StatusCode,
+		Headers:    request.Header,
+		Body:       responseBody,
 	}
 
 	return &finalResponse, nil
@@ -99,7 +97,11 @@ func (c *Client) getRequestBody(contentType string, body interface{}) ([]byte, e
 	}
 }
 
-func (c *Client) getHttpClient() *http.Client {
+func (c *Client) getHttpClient() core.HttpClient {
+	if gohttp_mock.MockupServer.IsMockServerEnabled() {
+		return gohttp_mock.MockupServer.GetMockedClient()
+	}
+
 	c.clientOnce.Do(func() {
 		if c.builder.client != nil {
 			c.coreClient = c.builder.client

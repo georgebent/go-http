@@ -21,7 +21,7 @@ func Post(url string) (string, error) {
 		return "", error
 	}
 
-	fmt.Println(response.GetStatusCode())
+	fmt.Println(response.StatusCode)
 
 	return response.BodyString(), nil
 }
