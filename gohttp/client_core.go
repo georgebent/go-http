@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/georgebent/go-httpclient/gomime"
 )
 
 const (
@@ -19,7 +21,7 @@ const (
 
 func (c *Client) do(method string, url string, headers http.Header, body interface{}) (*Response, error) {
 	fullHeaders := c.getRequestHeaders(headers)
-	requestBody, error := c.getRequestBody(fullHeaders.Get("Content-Type"), body)
+	requestBody, error := c.getRequestBody(fullHeaders.Get(gomime.HEADER_CONTENT_TYPE), body)
 	if error != nil {
 		return nil, error
 	}
@@ -53,15 +55,13 @@ func (c *Client) do(method string, url string, headers http.Header, body interfa
 		body:       responseBody,
 	}
 
-	finalResponse.status = "dsd ssd"
-
 	return &finalResponse, nil
 }
 
 func (c *Client) getRequestHeaders(requestHeaders http.Header) http.Header {
 	result := make(http.Header)
 
-	for header, value := range c.Builder.headers {
+	for header, value := range c.builder.headers {
 		if len(value) > 0 {
 			result.Set(header, value[0])
 		}
@@ -73,6 +73,14 @@ func (c *Client) getRequestHeaders(requestHeaders http.Header) http.Header {
 		}
 	}
 
+	if c.builder.userAgent != "" {
+		if result.Get(gomime.HEADER_USER_AGENT) != "" {
+			return result
+		}
+
+		result.Set(gomime.HEADER_USER_AGENT, c.builder.userAgent)
+	}
+
 	return result
 }
 
@@ -82,9 +90,9 @@ func (c *Client) getRequestBody(contentType string, body interface{}) ([]byte, e
 	}
 
 	switch strings.ToLower(contentType) {
-	case "application/json":
+	case gomime.CONTENT_TYPE_JSON:
 		return json.Marshal(body)
-	case "application/xml":
+	case gomime.CONTENT_TYPE_XML:
 		return xml.Marshal(body)
 	default:
 		return json.Marshal(body)
@@ -93,7 +101,11 @@ func (c *Client) getRequestBody(contentType string, body interface{}) ([]byte, e
 
 func (c *Client) getHttpClient() *http.Client {
 	c.clientOnce.Do(func() {
-		c.CoreClient = &http.Client{
+		if c.builder.client != nil {
+			c.coreClient = c.builder.client
+			return
+		}
+		c.coreClient = &http.Client{
 			Timeout: c.getConnectionTimeout() + c.getResponseTimeout(),
 			Transport: &http.Transport{
 				MaxIdleConns:          c.getMaxIdleConnections(),
@@ -105,23 +117,23 @@ func (c *Client) getHttpClient() *http.Client {
 		}
 	})
 
-	return c.CoreClient
+	return c.coreClient
 }
 
 func (c *Client) getMaxIdleConnections() int {
-	if c.Builder.maxIdleConnections > 0 {
-		return c.Builder.maxIdleConnections
+	if c.builder.maxIdleConnections > 0 {
+		return c.builder.maxIdleConnections
 	}
 
 	return DEFAULT_MAX_IDDLE_CONNECTIONS
 }
 
 func (c *Client) getResponseTimeout() time.Duration {
-	if c.Builder.responseTimeout > 0 {
-		return c.Builder.responseTimeout
+	if c.builder.responseTimeout > 0 {
+		return c.builder.responseTimeout
 	}
 
-	if c.Builder.disabledTimeouts {
+	if c.builder.disabledTimeouts {
 		return 0
 	}
 
@@ -129,11 +141,11 @@ func (c *Client) getResponseTimeout() time.Duration {
 }
 
 func (c *Client) getConnectionTimeout() time.Duration {
-	if c.Builder.connectionTimeout > 0 {
-		return c.Builder.connectionTimeout
+	if c.builder.connectionTimeout > 0 {
+		return c.builder.connectionTimeout
 	}
 
-	if c.Builder.disabledTimeouts {
+	if c.builder.disabledTimeouts {
 		return 0
 	}
 

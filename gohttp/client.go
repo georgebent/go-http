@@ -14,8 +14,8 @@ type HttpClient interface {
 }
 
 type Client struct {
-	CoreClient *http.Client
-	Builder    *clientBuilder
+	coreClient *http.Client
+	builder    *clientBuilder
 	clientOnce sync.Once
 }
 

@@ -16,7 +16,7 @@ func TestGetRequestHeaders(t *testing.T) {
 	}
 
 	client := Client{
-		Builder: &builder,
+		builder: &builder,
 	}
 
 	requestHeaders := make(http.Header)

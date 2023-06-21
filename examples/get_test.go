@@ -13,7 +13,7 @@ func TestGetError(t *testing.T) {
 
 	gohttp.AddMock(gohttp.Mock{
 		Method: http.MethodGet,
-		Url:    "https://webhook.site/2c52f051-5e9f-458e-8e4d-4cf44fff1ada",
+		Url:    "http://localhost",
 		Error:  errors.New("timeout getting responce"),
 	})
 
@@ -34,7 +34,7 @@ func TestGetError(t *testing.T) {
 func TestGetResponse(t *testing.T) {
 	gohttp.AddMock(gohttp.Mock{
 		Method:         http.MethodGet,
-		Url:            "https://webhook.site/2c52f051-5e9f-458e-8e4d-4cf44fff1ada",
+		Url:            "http://localhost",
 		ResponseStatus: 200,
 		ResponseBody:   "Ok",
 	})
